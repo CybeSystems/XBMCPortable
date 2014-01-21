@@ -304,6 +304,16 @@ public:
     return m_bPlatformDirectories;
   }
 
+  void DataFolder(const CStdString &filename)
+  {
+    m_bPlatformDataFolder = filename;
+  }
+
+  CStdString GetDataFolder()
+  {
+    return m_bPlatformDataFolder;
+  }  
+  
   void SetStandAlone(bool value);
 
   bool IsStandAlone()
@@ -411,6 +421,7 @@ protected:
   ThreadIdentifier m_threadID;       // application thread ID.  Used in applicationMessanger to know where we are firing a thread with delay from.
   bool m_bInitializing;
   bool m_bPlatformDirectories;
+  CStdString m_bPlatformDataFolder;
 
   CBookmark& m_progressTrackingVideoResumeBookmark;
   CFileItemPtr m_progressTrackingItem;
