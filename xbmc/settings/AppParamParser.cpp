@@ -129,6 +129,8 @@ void CAppParamParser::ParseArg(const CStdString &arg)
     g_application.SetStandAlone(true);
   else if (arg == "-p" || arg  == "--portable")
     g_application.EnablePlatformDirectories(false);
+  else if (arg.substr(0, 13) == "--datafolder=")
+    g_application.DataFolder(arg.substr(13));	
   else if (arg == "--debug")
     EnableDebugMode();
   else if (arg == "--legacy-res")

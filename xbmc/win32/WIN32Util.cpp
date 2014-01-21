@@ -456,13 +456,20 @@ CStdString CWIN32Util::GetProfilePath()
 {
   CStdString strProfilePath;
   CStdString strHomePath;
+  
+  CStdString strDataFolder;
+  strDataFolder = g_application.GetDataFolder();  
 
   CUtil::GetHomePath(strHomePath);
 
   if(g_application.PlatformDirectoriesEnabled())
     strProfilePath = URIUtils::AddFileToFolder(GetSpecialFolder(CSIDL_APPDATA|CSIDL_FLAG_CREATE), "XBMC");
   else
-    strProfilePath = URIUtils::AddFileToFolder(strHomePath , "portable_data");
+	if (strDataFolder == "") {
+		strProfilePath = URIUtils::AddFileToFolder(strHomePath , "portable_data");
+	} else {
+		strProfilePath = URIUtils::AddFileToFolder(strDataFolder, "portable_data");
+	}
 
   if (strProfilePath.length() == 0)
     strProfilePath = strHomePath;

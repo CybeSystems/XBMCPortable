@@ -423,6 +423,8 @@ CApplication::CApplication(void)
 
   m_bPresentFrame = false;
   m_bPlatformDirectories = true;
+  
+  m_bPlatformDataFolder = "";
 
   m_bStandalone = false;
   m_bEnableLegacyRes = false;
@@ -1020,14 +1022,25 @@ bool CApplication::InitDirectoriesLinux()
   {
     URIUtils::AddSlashAtEnd(xbmcPath);
     g_settings.m_logFolder = xbmcPath;
+	
+	CStdString strDataFolder;
+	strDataFolder = g_application.GetDataFolder();	
 
     CSpecialProtocol::SetXBMCBinPath(xbmcBinPath);
     CSpecialProtocol::SetXBMCPath(xbmcPath);
-    CSpecialProtocol::SetHomePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data"));
-    CSpecialProtocol::SetMasterProfilePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data/userdata"));
+	
+	if (strDataFolder == "") {
+		CSpecialProtocol::SetHomePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data"));
+		CSpecialProtocol::SetMasterProfilePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data/userdata"));
+		CStdString strTempPath = xbmcPath;
+		strTempPath = URIUtils::AddFileToFolder(strTempPath, "portable_data/temp");		
+	} else {
+		CSpecialProtocol::SetHomePath(URIUtils::AddFileToFolder(strDataFolder, "portable_data"));
+		CSpecialProtocol::SetMasterProfilePath(URIUtils::AddFileToFolder(strDataFolder, "portable_data/userdata"));
+		CStdString strTempPath = xbmcPath;
+		strTempPath= URIUtils::AddFileToFolder(strDataFolder, "portable_data/temp");
+	}
 
-    CStdString strTempPath = xbmcPath;
-    strTempPath = URIUtils::AddFileToFolder(strTempPath, "portable_data/temp");
     if (getenv("XBMC_TEMP"))
       strTempPath = getenv("XBMC_TEMP");
     CSpecialProtocol::SetTempPath(strTempPath);

@@ -318,6 +318,16 @@ public:
     return m_bPlatformDirectories;
   }
 
+  void DataFolder(const CStdString &filename)
+  {
+    m_bPlatformDataFolder = filename;
+  }
+
+  CStdString GetDataFolder()
+  {
+    return m_bPlatformDataFolder;
+  }  
+  
   void SetStandAlone(bool value);
 
   bool IsStandAlone()
@@ -405,6 +415,7 @@ protected:
   PLAYERCOREID m_eCurrentPlayer;
   bool m_bInitializing;
   bool m_bPlatformDirectories;
+  CStdString m_bPlatformDataFolder;
 
   CBookmark& m_progressTrackingVideoResumeBookmark;
   CFileItemPtr m_progressTrackingItem;
