@@ -1,0 +1,127 @@
+From 490562eb59d6b0039c79ecff3c97e551702f6624 Mon Sep 17 00:00:00 2001
+From: LORDofDOOM <tb@bbz-int.de>
+Date: Tue, 21 Jan 2014 08:45:06 +0100
+Subject: [PATCH]  [Core][Win32] Add option to use --datafolder commandline
+ parameter, useful for e.g. PortableApps
+
+---
+ xbmc/AppParamParser.cpp  |  2 ++
+ xbmc/Application.cpp     | 22 +++++++++++++++++-----
+ xbmc/Application.h       | 11 +++++++++++
+ xbmc/win32/WIN32Util.cpp |  9 ++++++++-
+ 4 files changed, 38 insertions(+), 6 deletions(-)
+
+diff --git a/xbmc/AppParamParser.cpp b/xbmc/AppParamParser.cpp
+index 5b1bab2..9709878 100644
+--- a/xbmc/AppParamParser.cpp
++++ b/xbmc/AppParamParser.cpp
+@@ -129,6 +129,8 @@ void CAppParamParser::ParseArg(const CStdString &arg)
+     g_application.SetStandAlone(true);
+   else if (arg == "-p" || arg  == "--portable")
+     g_application.EnablePlatformDirectories(false);
++  else if (arg.substr(0, 13) == "--datafolder=")
++    g_application.DataFolder(arg.substr(13));	
+   else if (arg == "--debug")
+     EnableDebugMode();
+   else if (arg == "--legacy-res")
+diff --git a/xbmc/Application.cpp b/xbmc/Application.cpp
+index e851294..a61b9df 100644
+--- a/xbmc/Application.cpp
++++ b/xbmc/Application.cpp
+@@ -420,6 +420,7 @@ CApplication::CApplication(void)
+ 
+   m_bPresentFrame = false;
+   m_bPlatformDirectories = true;
++  m_bPlatformDataFolder = "";
+ 
+   m_bStandalone = false;
+   m_bEnableLegacyRes = false;
+@@ -1079,14 +1080,25 @@ bool CApplication::InitDirectoriesLinux()
+   {
+     URIUtils::AddSlashAtEnd(xbmcPath);
+     g_advancedSettings.m_logFolder = xbmcPath;
++	
++	CStdString strDataFolder;
++	strDataFolder = g_application.GetDataFolder();		
+ 
+     CSpecialProtocol::SetXBMCBinPath(xbmcBinPath);
+     CSpecialProtocol::SetXBMCPath(xbmcPath);
+-    CSpecialProtocol::SetHomePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data"));
+-    CSpecialProtocol::SetMasterProfilePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data/userdata"));
+-
+-    CStdString strTempPath = xbmcPath;
+-    strTempPath = URIUtils::AddFileToFolder(strTempPath, "portable_data/temp");
++	
++	if (strDataFolder == "") {
++		CSpecialProtocol::SetHomePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data"));
++		CSpecialProtocol::SetMasterProfilePath(URIUtils::AddFileToFolder(xbmcPath, "portable_data/userdata"));
++		CStdString strTempPath = xbmcPath;
++		strTempPath = URIUtils::AddFileToFolder(strTempPath, "portable_data/temp");		
++	} else {
++		CSpecialProtocol::SetHomePath(URIUtils::AddFileToFolder(strDataFolder, "portable_data"));
++		CSpecialProtocol::SetMasterProfilePath(URIUtils::AddFileToFolder(strDataFolder, "portable_data/userdata"));
++		CStdString strTempPath = xbmcPath;
++		strTempPath= URIUtils::AddFileToFolder(strDataFolder, "portable_data/temp");
++	}
++	
+     if (getenv("XBMC_TEMP"))
+       strTempPath = getenv("XBMC_TEMP");
+     CSpecialProtocol::SetTempPath(strTempPath);
+diff --git a/xbmc/Application.h b/xbmc/Application.h
+index a0e20b4..a8e838f 100644
+--- a/xbmc/Application.h
++++ b/xbmc/Application.h
+@@ -303,6 +303,16 @@ public:
+     return m_bPlatformDirectories;
+   }
+ 
++  void DataFolder(const CStdString &filename)
++  {
++    m_bPlatformDataFolder = filename;
++  }
++
++  CStdString GetDataFolder()
++  {
++    return m_bPlatformDataFolder;
++  }  
++  
+   void SetStandAlone(bool value);
+ 
+   bool IsStandAlone()
+@@ -410,6 +420,7 @@ protected:
+   ThreadIdentifier m_threadID;       // application thread ID.  Used in applicationMessanger to know where we are firing a thread with delay from.
+   bool m_bInitializing;
+   bool m_bPlatformDirectories;
++  CStdString m_bPlatformDataFolder;
+ 
+   CBookmark& m_progressTrackingVideoResumeBookmark;
+   CFileItemPtr m_progressTrackingItem;
+diff --git a/xbmc/win32/WIN32Util.cpp b/xbmc/win32/WIN32Util.cpp
+index 03e71f0..ff810cc 100644
+--- a/xbmc/win32/WIN32Util.cpp
++++ b/xbmc/win32/WIN32Util.cpp
+@@ -410,13 +410,20 @@ std::string CWIN32Util::GetProfilePath()
+ {
+   std::string strProfilePath;
+   CStdString strHomePath;
++  
++  CStdString strDataFolder;
++  strDataFolder = g_application.GetDataFolder();    
+ 
+   CUtil::GetHomePath(strHomePath);
+ 
+   if(g_application.PlatformDirectoriesEnabled())
+     strProfilePath = URIUtils::AddFileToFolder(GetSpecialFolder(CSIDL_APPDATA|CSIDL_FLAG_CREATE), "XBMC");
+   else
+-    strProfilePath = URIUtils::AddFileToFolder(strHomePath , "portable_data");
++	if (strDataFolder == "") {
++		strProfilePath = URIUtils::AddFileToFolder(strHomePath , "portable_data");
++	} else {
++		strProfilePath = URIUtils::AddFileToFolder(strDataFolder, "portable_data");
++	}
+ 
+   if (strProfilePath.length() == 0)
+     strProfilePath = strHomePath;
+-- 
+1.8.3.msysgit.0
+
